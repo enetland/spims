@@ -9,6 +9,11 @@ def match(pattern_file, source_file):
     print "Pattern: " + pattern_file
     print "Source: " + source_file
 
+    pattern = scipy.misc.imread(pattern_file)
+    print pattern.shape
+    source = scipy.misc.imread(source_file)
+    print source.shape
+
 
 def validate(pattern, source):
     pattern.verify()
