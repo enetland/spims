@@ -19,10 +19,10 @@ def match(pattern_file, source_file):
     pattern = sp.misc.imread(pattern_file, False)
     pattern_fft = fftpack.fft2(pattern)
     pdb.set_trace()
-#    plt.imshow(np.log(np.abs(fftpack.fftshift(pattern_fft)) ** 2))
-#    plt.show()
-#    plt.imshow(np.abs(fftpack.ifft2(pattern_fft)))
-#    plt.show()
+    fft_power = np.log(np.abs(fftpack.fftshift(pattern_fft)) ** 2)
+    Image.fromarray(fft_power.astype(np.uint8)).show()
+    pdb.set_trace() 
+    Image.fromarray(np.abs(fftpack.ifft2(pattern_fft)).astype(np.uint8)).show()
     print pattern.shape
     source = sp.misc.imread(source_file)
     print source.shape
