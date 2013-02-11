@@ -1,13 +1,25 @@
-import numpy, scipy
+import numpy, scipy, os
 from PIL import Image
 
 
 def match(pattern_file, source_file):
     pattern = Image.open(pattern_file)
     source = Image.open(source_file)
+    #converting images to greyscale from RGB
+    pattern = pattern.convert(mode="L")
+    source = source.convert(mode="L")
+    
+    patternHeight, patternWidth = pattern.size
+    sourceHeight, sourceWidth = source.size
+    
+    print patternHeight, patternWidth
+    print sourceHeight, sourceWidth  
+    
+
+
     validate(pattern, source)
-    print "Pattern: " + pattern_file
-    print "Source: " + source_file
+    print "Pattern: " + os.path.basename(pattern_file)
+    print "Source: " + os.path.basename(source_file)
 
 
 def validate(pattern, source):
