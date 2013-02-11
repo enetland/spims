@@ -1,6 +1,0 @@
-Chirag & Ethan:
-	1)Do research for breaking down images via PIL (or maybe scipy or numpy)
-Ali & Anna:
-	2)Implement naive pattern string matching algorithm. If time allows try to implement the Boyer-Moore algorithm, but this isn't required.
-
--Documentation: do it while coding by using comments and formalize documentation later on
