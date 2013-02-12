@@ -1,10 +1,8 @@
 import numpy as np
 import scipy as sp
-from scipy import fftpack, ndimage, signal
+from scipy import fftpack, signal
 from PIL import Image
 
-#MatPlotLib is not installed on the linux machines, used just for testing
-#import matplotlib.pyplot as plt
 # This is just for debugging, should be removed later
 import pdb
 
@@ -19,34 +17,41 @@ def match(pattern_file, source_file):
 
     #Take the fft of both Images, Padding out the smaller image with
     # black to standardize the size
-    pattern_fft = fftpack.fft2(pattern)
+    pattern_fft = fftpack.fft2(pattern, source.shape())
+    source_fft = fftpack.fft2(source)
 
     # Normalize the two arrays, should be like this:
     # http://stackoverflow.com/questions/5639280/why-numpy-correlate-and-corrcoef-return-different-values-and-how-to-normalize
     # a = (a - mean(a)) / (std(a) * len(a))
-    # v = (v - mean(v)) /  std(v) 
-    
-    
+    # v = (v - mean(v)) /  std(v)
+    pdb.set_trace()
+    normalized_pattern = (pattern_fft - np.mean(pattern_fft)) / (np.std(pattern_fft) * pattern_fft.size)
+    normalized_source = (source_fft - np.mean(source_fft)) / np.std(source_fft)
+
     #Now we should be able to use signal.correlate2d to find the match location
     # The output of this process is an array, I *think* the max value in this
-    # Array will be the upper left corner of the Match Location
-
+    # Array will be the upper left corner of the Match Location
+    pdb.set_trace()
+    correlated = signal.correlate2d(normalized_pattern, normalized_source)
+    print np.unravel_index(correlated.argmax(), correlated.shape)
 
     #Some Testing Code
-    pdb.set_trace()
-    fft_power = np.log(np.abs(fftpack.fftshift(pattern_fft)) ** 2)
-    Image.fromarray(fft_power.astype(np.uint8)).show()
-    pdb.set_trace() 
-    Image.fromarray(np.abs(fftpack.ifft2(pattern_fft)).astype(np.uint8)).show()
-    print pattern.shape
-    source = sp.misc.imread(source_file)
-    print source.shape
+    #pdb.set_trace()
+    #fft_power = np.log(np.abs(fftpack.fftshift(pattern_fft)) ** 2)
+    #Image.fromarray(fft_power.astype(np.uint8)).show()
+    #pdb.set_trace()
+    #Image.fromarray(np.abs(fftpack.ifft2(pattern_fft)).astype(np.uint8)).show()
+    #print pattern.shape
+    #source = sp.misc.imread(source_file)
+    #print source.shape
 
 
 def validate(pattern_file, source_file):
-    
     Image.open(pattern_file).verify()
     Image.open(source_file).verify()
+    # Probably need a lot more verification here, ie. Pattern smaller than Source
+    # Not really sure how much the PIL verify function does either, the documentation
+    # sucks
 
 if __name__ == "__main__":
     from optparse import OptionParser
