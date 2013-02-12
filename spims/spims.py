@@ -12,38 +12,30 @@ def match(pattern_file, source_file):
     print "Pattern: " + pattern_file
     print "Source: " + source_file
     #First, Read in Both pattern and Source images
-    pattern = sp.misc.imread(pattern_file, False)
-    source = sp.misc.imread(source_file, False)
-
-    #Take the fft of both Images, Padding out the smaller image with
-    # black to standardize the size
-    pattern_fft = fftpack.fft2(pattern, source.shape())
-    source_fft = fftpack.fft2(source)
+    pattern = sp.misc.imread(pattern_file, True)
+    source = sp.misc.imread(source_file, True)
 
     # Normalize the two arrays, should be like this:
     # http://stackoverflow.com/questions/5639280/why-numpy-correlate-and-corrcoef-return-different-values-and-how-to-normalize
     # a = (a - mean(a)) / (std(a) * len(a))
     # v = (v - mean(v)) /  std(v)
-    pdb.set_trace()
-    normalized_pattern = (pattern_fft - np.mean(pattern_fft)) / (np.std(pattern_fft) * pattern_fft.size)
-    normalized_source = (source_fft - np.mean(source_fft)) / np.std(source_fft)
+    normalized_pattern = (pattern - np.mean(pattern)) / (np.std(pattern) * pattern.size)
+    normalized_source = (source - np.mean(source)) / np.std(source)
 
-    #Now we should be able to use signal.correlate2d to find the match location
-    # The output of this process is an array, I *think* the max value in this
-    # Array will be the upper left corner of the Match Location
-    pdb.set_trace()
-    correlated = signal.correlate2d(normalized_pattern, normalized_source)
+    #Take the fft of both Images, padding the pattern out with 0's to be the same shape as the source
+    pattern_fft = fftpack.fft2(normalized_pattern, source.shape)
+    source_fft = fftpack.fft2(normalized_source)
+
+    # Perform the correlation in the frequency domain, which just the inverse FFT of the pattern matrix's conjugate *
+    # the source matrix
+    # http://en.wikipedia.org/wiki/Cross-correlation#Properties
+    correlated = fftpack.ifft2(pattern_fft.conjugate() * source_fft)
+    
+    # Find the Max of the correlated array, and print out the index in the source image
     print np.unravel_index(correlated.argmax(), correlated.shape)
-
-    #Some Testing Code
-    #pdb.set_trace()
-    #fft_power = np.log(np.abs(fftpack.fftshift(pattern_fft)) ** 2)
-    #Image.fromarray(fft_power.astype(np.uint8)).show()
-    #pdb.set_trace()
-    #Image.fromarray(np.abs(fftpack.ifft2(pattern_fft)).astype(np.uint8)).show()
-    #print pattern.shape
-    #source = sp.misc.imread(source_file)
-    #print source.shape
+ 
+    # Can visualize the correlated matrix (For testing)
+    #Image.fromarray(correlated).show()
 
 
 def validate(pattern_file, source_file):
