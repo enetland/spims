@@ -3,6 +3,7 @@ import scipy as sp
 from scipy import fftpack, signal
 from PIL import Image
 import os
+import imghdr
 
 # This is just for debugging, should be removed later
 import pdb
@@ -41,11 +42,29 @@ def match(pattern_file, source_file):
 
 
 def validate(pattern_file, source_file):
-    Image.open(pattern_file).verify()
-    Image.open(source_file).verify()
+    if not Image.open(pattern_file).verify() and Image.open(source_file).verify():
+        raise Exception('Not a valid file!')
+    elif not check_format(pattern_file):
+        raise Exception('Pattern file is incorrect format')
+    elif not check_format(source_file):
+        raise Exception('Source file is incorrect format')
+    elif check_size(pattern_file, source_file):
+        raise Exception('Pattern file is larger than source file')
+    else: 
+        pass 
     # Probably need a lot more verification here, ie. Pattern smaller than Source
     # Not really sure how much the PIL verify function does either, the documentation
     # sucks
+
+
+def check_format(img_file):
+    return imghdr.what(img_file) == 'png' or imghdr.what(img_file) == 'gif' or imghdr.what(img_file) == 'jpeg'
+
+def check_size(pattern_file, source_file):
+    pattern = Image.open(pattern_file)
+    source = Image.open(source_file)
+    return pattern.size > source.size
+
 
 if __name__ == "__main__":
     from optparse import OptionParser
