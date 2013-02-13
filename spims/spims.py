@@ -2,16 +2,17 @@ import numpy as np
 import scipy as sp
 from scipy import fftpack, signal
 from PIL import Image
+import os
 
 # This is just for debugging, should be removed later
 import pdb
 
 
 def match(pattern_file, source_file):
-
+    
     validate(pattern_file, source_file)
-    print "Pattern: " + pattern_file
-    print "Source: " + source_file
+    pattern = Image.open(pattern_file)
+    patternWidth, patternHeight = pattern.size
     #First, Read in Both pattern and Source images
     pattern = sp.misc.imread(pattern_file, True)
     source = sp.misc.imread(source_file, True)
@@ -30,11 +31,11 @@ def match(pattern_file, source_file):
     # Perform the correlation in the frequency domain, which just the inverse FFT of the pattern matrix's conjugate *
     # the source matrix
     # http://en.wikipedia.org/wiki/Cross-correlation#Properties
-    correlated = fftpack.ifft2(pattern_fft.conjugate() * source_fft)
-    
+    correlated = fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
+    coords = np.unravel_index(correlated.argmax(), correlated.shape) 
     # Find the Max of the correlated array, and print out the index in the source image
-    print np.unravel_index(correlated.argmax(), correlated.shape)
- 
+    print os.path.basename(pattern_file) + " matches " + os.path.basename(source_file) + " at " + str(patternWidth) +\
+           "x" + str(patternHeight) + "+" + str(coords[1]) + "+" + str(coords[0])
     # Can visualize the correlated matrix (For testing)
     #Image.fromarray(correlated).show()
 
