@@ -15,7 +15,7 @@ class Img:
         self.image = Image.open(file_name)
         if self.image.mode != 'RGB':
             self.image = self.image.convert('RGB')
-	self.data = np.asarray(self.image)
+        self.data = np.asarray(self.image)
         self.height, self.width, self.depth = self.data.shape
 
     def is_valid_format(self):
@@ -46,7 +46,7 @@ def match_layer(pattern_layer, source_layer):
     # inverse FFT of the pattern matrix's conjugate * the source matrix
     # http://en.wikipedia.org/wiki/Cross-correlation#Properties
     return fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
- 
+
 # If the coordinates returned by match are beyond the bounds of the
 # source image, a match was NOT found.
 def is_match(pattern, source, x, y):
