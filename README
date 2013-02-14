@@ -6,17 +6,26 @@ Software Development Semester Project
     Ethan Netland - enetland@gmail.com
     Chirag Khatri - ckhatri4@gmail.com
 
-3. How to Compile/Run SPIMS:
-    Open command line and type "python spims.py"
+3. How to Compile/Run SPIMS: 
+    To run the SPIMS application, go to the bin directory and type
+    './spims -p <pattern_image> -s <source_image>'. 
+    If a match is found it will be returned in the format specified in the assignment:  
+    '<file1> matches <file2> at <m1>x<n1>+<x>+<y>'.
+    If a match is not found or the inputs were unacceptable the program will terminate. 
 
 4. Third Party Acknowledgements:
     Libraries:
-    - numpy
-    - scipy - fftpack, signal
-    - pil - Image
-    - os
-    - imghdr
+    - NumPy - http://www.numpy.org/
+    - SciPy - http://www.scipy.org/
+        -fftpack
+        -signal
+    - pil - http://www.pythonware.com/products/pil/ 
+        -Image
+    - imghdr - http://docs.python.org/2.6/library/imghdr.html
     Additional Items:
-    - Algorithm for normalized cross-correlation of function found on
-      Wikipedia : http://en.wikipedia.org/wiki/Cross-correlation#Properties
+    - Algorithm for normalized cross-correlation of function found on Wikipedia:
+      http://en.wikipedia.org/wiki/Cross-correlation#Properties
+    - Template Matching By Normalized Cross Correlation from Fourier Transform Processing 
+      With ImageMagick provides a mathematical explanation of the algorithm :
+      http://www.fmwconcepts.com/imagemagick/fourier_transforms/fourier.html#normcrosscorr
 
