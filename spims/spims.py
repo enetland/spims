@@ -53,6 +53,8 @@ def is_match(pattern, source, x, y):
     return (x + pattern.width) <= source.width and \
             (y + pattern.height) <= source.height
 
+# Prints the coordinates of the matching images as well as the pattern 
+# and source image file names
 def print_result(match_coords, pattern, source):
     x = match_coords[1]
     y = match_coords[0]
@@ -62,6 +64,9 @@ def print_result(match_coords, pattern, source):
         # Can visualize the correlated matrix (For testing)
         # Image.fromarray(correlated).show()
 
+# Raises exceptions for the followiing incorrect inputs:
+# Invalid file type, incorrect image format for the pattern or source file 
+# and when the pattern file is bigger than the source file  
 def validate(pattern, source):
     if not Image.open(pattern.full_name).verify() and Image.open(source.full_name).verify():
         raise Exception('Not a valid file!')
