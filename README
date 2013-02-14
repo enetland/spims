@@ -1,15 +1,15 @@
 Software Development Semester Project
 =====================================
-1/2. Team Names & Preferred Emails 
+1/2. Team Names & Preferred Emails: 
 	Anna McGovern - mcgovern.an@gmail.com
 	Alison Green  - ohohbot@gmail.com
 	Ethan Netland - enetland@gmail.com
 	Chirag Khatri - ckhatri4@gmail.com
 
-3. How to Compile/Run SPIMS
+3. How to Compile/Run SPIMS:
 	Open command line and type "python spims.py"
 
-4. Third Party Acknowledgements
+4. Third Party Acknowledgements:
 	Libraries:
 	- numpy
 	- scipy - fftpack, signal
