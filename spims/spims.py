@@ -12,8 +12,10 @@ class Img:
     def __init__(self, file_name):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
-        self.data = sp.misc.imread(file_name, False)
-	pdb.set_trace()
+        self.image = Image.open(file_name)
+        if self.image.mode != 'RGB':
+            self.image = self.image.convert('RGB')
+	self.data = np.asarray(self.image)
         self.height, self.width, self.depth = self.data.shape
 
     def is_valid_format(self):
