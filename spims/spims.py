@@ -83,19 +83,3 @@ def check_size(pattern, source):
     return pattern.width > source.width or \
             pattern.height > source.height
 
-if __name__ == "__main__":
-    from optparse import OptionParser
-    parser = OptionParser()
-    parser.add_option("-p", "--pattern", dest="pattern", help="Image to search for.", metavar="PATTERN_FILE")
-    parser.add_option("-s", "--source", dest="source", help="Image to search for", metavar="SOURCE_FILE")
-
-    (options, args) = parser.parse_args()
-    if options.pattern is None:
-        parser.error('Pattern must be provided')
-    if options.source is None:
-        parser.error('Source must be provided')
-    else:
-        pattern = Img(options.pattern)
-        source = Img(options.source)
-        match_coords = match_rgb(pattern, source)
-        print_result(match_coords, pattern, source)
