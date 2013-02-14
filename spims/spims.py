@@ -12,39 +12,39 @@ class Img:
     def __init__(self, file_name):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
-        self.data = sp.misc.imread(file_name, True)
-        self.height, self.width = self.data.shape
+        self.data = sp.misc.imread(file_name, False)
+	pdb.set_trace()
+        self.height, self.width, self.depth = self.data.shape
 
     def is_valid_format(self):
         return imghdr.what(self.full_name) == 'png' \
                 or imghdr.what(self.full_name) == 'gif' \
                 or imghdr.what(self.full_name) == 'jpeg'
 
+def match_rgb(pattern, source):
+    correlated = np.zeros(source.data[:,:,0].shape)
+    for i in range(2):
+        correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
+    return np.unravel_index(correlated.argmax(), correlated.shape)
 
-def match(pattern, source):
-
-    validate(pattern, source)
-
-    pattern_data = pattern.data
-    source_data = source.data
+def match_layer(pattern_layer, source_layer):
     # Normalize the two arrays, should be like this:
     # http://stackoverflow.com/questions/5639280/why-numpy-correlate-and-corrcoef-return-different-values-and-how-to-normalize
     # a = (a - mean(a)) / (std(a) * len(a))
     # v = (v - mean(v)) /  std(v)
-    normalized_pattern = (pattern_data - np.mean(pattern_data)) / (np.std(pattern_data) * pattern_data.size)
-    normalized_source = (source_data - np.mean(source_data)) / np.std(source_data)
+    normalized_pattern = (pattern_layer - np.mean(pattern_layer)) / (np.std(pattern_layer) * pattern_layer.size)
+    normalized_source = (source_layer - np.mean(source_layer)) / np.std(source_layer)
 
     #Take the fft of both Images, padding the pattern out with 0's
     # to be the same shape as the source
-    pattern_fft = fftpack.fft2(normalized_pattern, source_data.shape)
+    pattern_fft = fftpack.fft2(normalized_pattern, source_layer.shape)
     source_fft = fftpack.fft2(normalized_source)
 
     # Perform the correlation in the frequency domain, which just the
     # inverse FFT of the pattern matrix's conjugate * the source matrix
     # http://en.wikipedia.org/wiki/Cross-correlation#Properties
-    correlated = fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
-    return np.unravel_index(correlated.argmax(), correlated.shape) 
-
+    return fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
+ 
 # If the coordinates returned by match are beyond the bounds of the
 # source image, a match was NOT found.
 def is_match(pattern, source, x, y):
@@ -90,5 +90,5 @@ if __name__ == "__main__":
     else:
         pattern = Img(options.pattern)
         source = Img(options.source)
-        match_coords = match(pattern, source)
+        match_coords = match_rgb(pattern, source)
         print_result(match_coords, pattern, source)
