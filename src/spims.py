@@ -4,28 +4,31 @@ from scipy import fftpack, signal
 from PIL import Image
 import os
 import imghdr
-
-# This is just for debugging, should be removed later
+import warnings
 import pdb
+
 
 class Img:
     def __init__(self, file_name):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
         self.image = Image.open(file_name)
-        if not (self.image.verify() and self.image.is_valid_format()):
+        if not (self.is_valid()):
             raise Exception(file_name + ' is not a valid image file.')
         if self.image.mode != 'RGB':
             self.image = self.image.convert('RGB')
         self.data = np.asarray(self.image)
         self.height, self.width, self.depth = self.data.shape
 
-    def is_valid_format(self):
+    def is_valid(self):
         return imghdr.what(self.full_name) == 'png' \
                 or imghdr.what(self.full_name) == 'gif' \
                 or imghdr.what(self.full_name) == 'jpeg'
 
 def match_rgb(pattern, source):
+    # Ignore's ComplexWarning when casting complex values to
+    # real values, which effectivly discards the imaginary part
+    warnings.simplefilter("ignore", np.ComplexWarning)
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(2):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
@@ -33,9 +36,9 @@ def match_rgb(pattern, source):
 
 def match_layer(pattern_layer, source_layer):
     # Normalize the two arrays, should be like this:
-    # http://stackoverflow.com/questions/5639280/why-numpy-correlate-and-corrcoef-return-different-values-and-how-to-normalize
     # a = (a - mean(a)) / (std(a) * len(a))
     # v = (v - mean(v)) /  std(v)
+    # Source: http://bit.ly/WsRveH
     normalized_pattern = (pattern_layer - np.mean(pattern_layer)) / (np.std(pattern_layer) * pattern_layer.size)
     normalized_source = (source_layer - np.mean(source_layer)) / np.std(source_layer)
 
