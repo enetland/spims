@@ -13,6 +13,8 @@ class Img:
         self.full_name = file_name
         self.name = os.path.basename(file_name)
         self.image = Image.open(file_name)
+        if not (self.image.verify() and self.image.is_valid_format()):
+            raise Exception(file_name + ' is not a valid image file.')
         if self.image.mode != 'RGB':
             self.image = self.image.convert('RGB')
         self.data = np.asarray(self.image)
@@ -68,13 +70,7 @@ def print_result(match_coords, pattern, source):
 # Invalid file type, incorrect image format for the pattern or source file 
 # and when the pattern file is bigger than the source file  
 def validate(pattern, source):
-    if not Image.open(pattern.full_name).verify() and Image.open(source.full_name).verify():
-        raise Exception('Not a valid file!')
-    elif not pattern.is_valid_format():
-        raise Exception('Pattern file is incorrect format')
-    elif not pattern.is_valid_format():
-        raise Exception('Source file is incorrect format')
-    elif check_size(pattern, source):
+    if check_size(pattern, source):
         raise Exception('Pattern file is larger than source file')
     else: 
         pass 
