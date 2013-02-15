@@ -12,18 +12,26 @@ class Img:
     def __init__(self, file_name):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
-        self.image = Image.open(file_name)
-        if not (self.is_valid()):
-            raise Exception(file_name + ' is not a valid image file.')
+        self.image = self.open()
         if self.image.mode != 'RGB':
             self.image = self.image.convert('RGB')
         self.data = np.asarray(self.image)
         self.height, self.width, self.depth = self.data.shape
 
-    def is_valid(self):
-        return imghdr.what(self.full_name) == 'png' \
-                or imghdr.what(self.full_name) == 'gif' \
-                or imghdr.what(self.full_name) == 'jpeg'
+    def open(self):
+        try:
+            fname = self.full_name
+            img = Image.open(fname)
+            if not (imghdr.what(fname) == 'png'
+                    or imghdr.what(fname) == 'gif'
+                    or imghdr.what(fname) == 'jpeg'):
+                print "Invalid file given: %s" % fname
+                exit(1)
+            else:
+                return img
+        except IOError:
+            print "No such file or directory: %s" % fname
+            exit(1)
 
 def match_rgb(pattern, source):
     # Ignore's ComplexWarning when casting complex values to
