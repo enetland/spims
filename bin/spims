@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append("../spims/")
+sys.path.append("../src/")
 
 if __name__ == "__main__":
     import spims
