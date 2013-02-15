@@ -7,7 +7,6 @@ import imghdr
 import warnings
 import pdb
 
-
 class Img:
     def __init__(self, file_name):
         self.full_name = file_name
