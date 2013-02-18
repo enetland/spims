@@ -35,7 +35,7 @@ class Img:
 def match_rgb(pattern, source):
     # Ignore's ComplexWarning when casting complex values to
     # real values, which effectivly discards the imaginary part
-    warnings.simplefilter("ignore", np.ComplexWarning)
+    # warnings.simplefilter("ignore", np.ComplexWarning)
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(2):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
