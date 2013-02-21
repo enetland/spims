@@ -39,8 +39,7 @@ def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(2):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
-    pdb.set_trace()
-    if correlated.max() > 1.5:	
+    if correlated.max() > 1.6:	
         return np.unravel_index(correlated.argmax(), correlated.shape)
     else:
         return False
