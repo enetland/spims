@@ -39,7 +39,11 @@ def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(2):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
-    return np.unravel_index(correlated.argmax(), correlated.shape)
+    pdb.set_trace()
+    if correlated.max() > 1.5:	
+        return np.unravel_index(correlated.argmax(), correlated.shape)
+    else:
+        return False
 
 def match_layer(pattern_layer, source_layer):
     # Normalize the two arrays, should be like this:
@@ -61,16 +65,16 @@ def match_layer(pattern_layer, source_layer):
 
 # If the coordinates returned by match are beyond the bounds of the
 # source image, a match was NOT found.
-def is_match(pattern, source, x, y):
-    return (x + pattern.width) <= source.width and \
-            (y + pattern.height) <= source.height
+def is_match(pattern, source, match_coords):
+    return (match_coords[1] + pattern.width) <= source.width and \
+            (match_coords[0] + pattern.height) <= source.height
 
 # Prints the coordinates of the matching images as well as the pattern 
 # and source image file names
 def print_result(match_coords, pattern, source):
-    x = match_coords[1]
-    y = match_coords[0]
-    if is_match(pattern, source, x, y):
+    if match_coords and is_match(pattern, source, match_coords):
+        x = match_coords[1]
+        y = match_coords[0]
         print "%s matches %s at %dx%d+%d+%d" % (pattern.name,
                 source.name, pattern.width, pattern.height, x, y)
         # Can visualize the correlated matrix (For testing)
