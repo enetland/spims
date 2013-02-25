@@ -11,10 +11,10 @@ class Img:
     def __init__(self, file_name):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
-        self.image = self.open()
-        if self.image.mode != 'RGB':
-            self.image = self.image.convert('RGB')
-        self.data = np.asarray(self.image)
+        image = self.open()
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        self.data = np.asarray(image)
         self.height, self.width, self.depth = self.data.shape
 
     def open(self):
@@ -39,10 +39,18 @@ def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(2):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
-    if correlated.max() > 1.6:	
+    if correlated.max() > 1.5:	
         return np.unravel_index(correlated.argmax(), correlated.shape)
     else:
         return False
+
+def match_dirs(patterns, sources):
+    for source_file in sources:
+        source = Img(source_file)
+        for pattern_file in patterns:
+            pattern = Img(pattern_file)
+            match_coords = match_rgb(pattern, source)
+            print_result(match_coords, pattern, source)
 
 def match_layer(pattern_layer, source_layer):
     # Normalize the two arrays, should be like this:

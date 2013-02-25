@@ -12,18 +12,24 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-p", "--pattern", dest="pattern", help="Image to search for.", metavar="PATTERN_FILE")
     parser.add_option("-s", "--source", dest="source", help="Image to search for", metavar="SOURCE_FILE")
+    parser.add_option("--pdir", "--pattern_dir", dest="pattern_dir", help="Directory of images to search for.", metavar="PATTERN_DIR")
+    parser.add_option("--sdir", "--source_dir", dest="source_dir", help="Directory of images to search for", metavar="SOURCE_DIR")
 
     (options, args) = parser.parse_args()
-    if options.pattern is None:
-        parser.error('Pattern must be provided')
-    if options.source is None:
-        parser.error('Source must be provided')
-    else: 
-        for pattern_file in os.listdir(options.pattern):
-            for source_file in os.listdir(options.source):
-                pattern_img = options.pattern + pattern_file
-                source_img = options.source + source_file
-                pattern = spims.Img(pattern_img)
-                source = spims.Img(source_img)
-                match_coords = spims.match_rgb(pattern, source)
-                spims.print_result(match_coords, pattern, source)
+    patterns = None
+    sources = None
+    if options.pattern and os.path.isfile(options.pattern):
+        patterns = [options.pattern]
+    if options.source and os.path.isfile(options.source):
+        sources = [options.source]
+    if options.pattern_dir and os.path.isdir(options.pattern_dir):
+        patterns = map(lambda x: options.pattern_dir + x, os.listdir(options.pattern_dir))
+    if options.source_dir and os.path.isdir(options.source_dir):
+        sources = map(lambda x: options.source_dir + x, os.listdir(options.source_dir))
+
+    if patterns is None:
+        parser.error('Pattern file or directory must be provided')
+    if sources is None:
+        parser.error('Source file or directory must be provided')
+    else:
+        spims.match_dirs(patterns, sources)
