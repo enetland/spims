@@ -14,6 +14,7 @@ if __name__ == "__main__":
     parser.add_option("-s", "--source", dest="source", help="Image to search for", metavar="SOURCE_FILE")
     parser.add_option("--pdir", "--pattern_dir", dest="pattern_dir", help="Directory of images to search for.", metavar="PATTERN_DIR")
     parser.add_option("--sdir", "--source_dir", dest="source_dir", help="Directory of images to search for", metavar="SOURCE_DIR")
+    parser.add_option("-d", dest="debug", help="Debug Mode", action="store_true", default=False)
 
     (options, args) = parser.parse_args()
     patterns = None
@@ -32,4 +33,4 @@ if __name__ == "__main__":
     if sources is None:
         parser.error('Source file or directory must be provided')
     else:
-        spims.match_dirs(patterns, sources)
+        spims.match_dirs(patterns, sources, options.debug)

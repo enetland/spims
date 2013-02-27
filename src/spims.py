@@ -7,6 +7,8 @@ import imghdr
 import warnings
 import pdb
 
+debug = False
+
 class Img:
     def __init__(self, file_name):
         self.full_name = file_name
@@ -37,14 +39,19 @@ def match_rgb(pattern, source):
     # real values, which effectivly discards the imaginary part
     # warnings.simplefilter("ignore", np.ComplexWarning)
     correlated = np.zeros(source.data[:,:,0].shape)
-    for i in range(2):
+    for i in range(3):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
+    if debug:
+        print (correlated.max() - correlated.mean()) / correlated.std()
+        show_stretched(correlated)
     if correlated.max() > 1.5:	
         return np.unravel_index(correlated.argmax(), correlated.shape)
     else:
         return False
 
-def match_dirs(patterns, sources):
+def match_dirs(patterns, sources, debug_flag):
+    global debug
+    debug = debug_flag
     for source_file in sources:
         source = Img(source_file)
         for pattern_file in patterns:
@@ -100,3 +107,10 @@ def check_size(pattern, source):
     return pattern.width > source.width or \
             pattern.height > source.height
 
+#debugging/visualization
+
+def show_stretched(image):
+    Image.fromarray(contrast_stretch(image).astype(np.uint8)).show()
+
+def contrast_stretch(image):
+    return (image - image.min()) / (image.max() - image.min()) * 255
