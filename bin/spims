@@ -8,28 +8,37 @@ sys.path.append("../src/")
 
 if __name__ == "__main__":
     import spims
-    from optparse import OptionParser
-    parser = OptionParser()
-    parser.add_option("-p", "--pattern", dest="pattern", help="Image to search for.", metavar="PATTERN_FILE")
-    parser.add_option("-s", "--source", dest="source", help="Image to search for", metavar="SOURCE_FILE")
-    parser.add_option("--pdir", "--pattern_dir", dest="pattern_dir", help="Directory of images to search for.", metavar="PATTERN_DIR")
-    parser.add_option("--sdir", "--source_dir", dest="source_dir", help="Directory of images to search for", metavar="SOURCE_DIR")
+    #from optparse import OptionParser
+    #parser = OptionParser()
+    #parser.add_option("-p", "--pattern", dest="pattern", help="Image to search for.", metavar="PATTERN_FILE")
+    #parser.add_option("-s", "--source", dest="source", help="Image to search for", metavar="SOURCE_FILE")
+    #parser.add_option("--pdir", "--pattern_dir", dest="pattern_dir", help="Directory of images to search for.", metavar="PATTERN_DIR")
+    #parser.add_option("--sdir", "--source_dir", dest="source_dir", help="Directory of images to search for", metavar="SOURCE_DIR")
 
-    (options, args) = parser.parse_args()
-    patterns = None
-    sources = None
-    if options.pattern and os.path.isfile(options.pattern):
-        patterns = [options.pattern]
-    if options.source and os.path.isfile(options.source):
-        sources = [options.source]
-    if options.pattern_dir and os.path.isdir(options.pattern_dir):
-        patterns = map(lambda x: options.pattern_dir + x, os.listdir(options.pattern_dir))
-    if options.source_dir and os.path.isdir(options.source_dir):
-        sources = map(lambda x: options.source_dir + x, os.listdir(options.source_dir))
+    #(options, args) = parser.parse_args()
+    #patterns = None
+    #sources = None
 
-    if patterns is None:
-        parser.error('Pattern file or directory must be provided')
-    if sources is None:
-        parser.error('Source file or directory must be provided')
+    if len(sys.argv) == 5:
+        if sys.argv[1] == '-p' and os.path.isfile(sys.argv[2]):
+            patterns = [sys.argv[2]]
+        elif sys.argv[1] == '-pdir' and os.path.isdir(sys.argv[2]):
+            pattern_dir = sys.argv[2]
+            patterns = map(lambda x: pattern_dir + x, os.listdir(pattern_dir))
+        else:
+            raise Exception('Pattern file or directory must be provided')
+
+        if sys.argv[3] == '-s' and os.path.isfile(sys.argv[4]):
+            sources = [sys.argv[4]]
+        elif sys.argv[3] == '-sdir' and os.path.isdir(sys.argv[4]):
+            source_dir = sys.argv[4]
+            sources = map(lambda x: source_dir + x, os.listdir(source_dir))
+        else:
+            raise Exception('Source file or directory must be provided')
+
     else:
-        spims.match_dirs(patterns, sources)
+        raise Exception('Incorrect number of arguments')
+
+    
+    spims.match_dirs(patterns, sources)
+
