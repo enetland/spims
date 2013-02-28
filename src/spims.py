@@ -36,11 +36,25 @@ class Img:
         except IOError:
             print "No such file or directory: %s" % fname
             exit(1)
+###############################################################################
+# Main Logic
+###############################################################################
 
+# Loop through the passed arrays of patterns and sources, matching each pair
+def match_dirs(patterns, sources, debug_flag):
+    global debug
+    debug = debug_flag
+    for pattern_file in patterns:
+        pattern = Img(pattern_file, True)
+        for source_file in sources:
+            source = Img(source_file)
+            match_coords = match_rgb(pattern, source)
+            print_result(match_coords, pattern, source)
+
+# Loop through the RGB channels of the pattern and source, match each layer
+# takes the highest values from the fft correlation, and validates the match
+# using a hash algorithm
 def match_rgb(pattern, source):
-    # Ignore's ComplexWarning when casting complex values to
-    # real values, which effectivly discards the imaginary part
-    # warnings.simplefilter("ignore", np.ComplexWarning)
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(3):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
@@ -56,37 +70,8 @@ def match_rgb(pattern, source):
     else:
         return False
 
-def confirm_match(pattern, source, point):
-    hist_threshold = .25
-    hash_threshold = 5
-    ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0]) 
-    
-    source_hist = histogram(ss)
-    hist_dist = histogram_distance(pattern.histogram, source_hist)    
-    
-    source_hash = perceptual_hash(ss)
-    hash_dist = np.sum(np.abs(pattern.hash - source_hash))
-    
-
-    if debug:
-        print 'hist_dist: ' + hist_dist.__str__()
-        print 'hash_dist: ' + hash_dist.__str__()
-        if hist_dist < hist_threshold or hash_dist < hash_threshold:
-            Image.fromarray(ss.astype(np.uint8)).show()
-            pdb.set_trace()
-    return hist_dist < hist_threshold or hash_dist < hash_threshold
-    
-
-def match_dirs(patterns, sources, debug_flag):
-    global debug
-    debug = debug_flag
-    for pattern_file in patterns:
-        pattern = Img(pattern_file, True)
-        for source_file in sources:
-            source = Img(source_file)
-            match_coords = match_rgb(pattern, source)
-            print_result(match_coords, pattern, source)
-
+# Run a (simplified) normalized fft correlation over a single channel
+# of the pattern and source
 def match_layer(pattern_layer, source_layer):
     # Normalize the two arrays, should be like this:
     # a = (a - mean(a)) / (std(a) * len(a))
@@ -104,6 +89,27 @@ def match_layer(pattern_layer, source_layer):
     # inverse FFT of the pattern matrix's conjugate * the source matrix
     # http://en.wikipedia.org/wiki/Cross-correlation#Properties
     return fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
+
+# Run the confirmation logic on a matching point
+def confirm_match(pattern, source, point):
+    #hist_threshold = .15
+    hash_threshold = 3
+    ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0]) 
+    
+    #source_hist = histogram(ss)
+    #hist_dist = histogram_distance(pattern.histogram, source_hist)    
+    
+    source_hash = perceptual_hash(ss)
+    hash_dist = np.sum(np.abs(pattern.hash - source_hash))
+    
+    if debug:
+        #print 'hist_dist: ' + hist_dist.__str__()
+        print 'hash_dist: ' + hash_dist.__str__()
+        if hash_dist < hash_threshold:
+            Image.fromarray(ss.astype(np.uint8)).show()
+        pdb.set_trace()
+
+    return  hash_dist < hash_threshold
 
 # If the coordinates returned by match are beyond the bounds of the
 # source image, a match was NOT found.
@@ -128,8 +134,18 @@ def print_result(match_coords, pattern, source):
 def validate(pattern, source):
     if check_size(pattern, source):
         raise Exception('Pattern file is larger than source file')
-    else: 
-        pass
+
+###############################################################################
+# Validation Logic
+##############################################################################
+
+# This method will slice out a portion of a source image, for use with the hashing
+# and histogram methods
+def source_slice(source, x, y, width, height):
+    slice = source[y:y+height,x:x+width,:]
+    #Image.fromarray(slice.astype(np.uint8)).show()
+    return slice
+
 # This method takes any image, resizes it to 8x8, and hashes into a 64 length
 # array for comparison. It doesn't work at all.
 def perceptual_hash(data):
@@ -137,12 +153,7 @@ def perceptual_hash(data):
     result = im > im.mean()
     return result
 
-def source_slice(source, x, y, width, height):
-    slice = source[y:y+height,x:x+width,:]
-    #Image.fromarray(slice.astype(np.uint8)).show()
-    return slice
-
-##Calculate a histogram using 768 buckets, one for each value
+# Calculates a color histogram, using 256 buckets for each RGB channel
 def histogram(data):
     histograms = np.zeros(0, np.uint8)
     for i in range(3):
@@ -150,18 +161,29 @@ def histogram(data):
     flat = histograms.ravel()
     return flat
 
+# Given two histograms, calculates a difference between them.
+# This is a very stupid version of the distance calculation, doesn't work very well.
+# With a better distance calculation this could potentially be much more useful.
 def histogram_distance(h1, h2):
     diff = h1 - h2
     return np.sqrt(np.dot(diff, diff))
 
+# Simply confirms that the pattern is smaller in both dimensions than 
+# the source image
 def check_size(pattern, source):
     return pattern.width > source.width or \
             pattern.height > source.height
 
-#debugging/visualization
+###############################################################################
+# Debugging and Visualization
+###############################################################################
 
+# Open a contrast stretched version of the passed array (only really useful for
+# the correlation plot
 def show_stretched(array):
     Image.fromarray(contrast_stretch(array).astype(np.uint8)).show()
 
+# Stretches the pixel values of the correlation plot to full 0-256, scaling
+# each pixel appropriately
 def contrast_stretch(array):
     return (array - array.min()) / (array.max() - array.min()) * 255
