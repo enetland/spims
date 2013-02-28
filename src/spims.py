@@ -10,7 +10,7 @@ import pdb
 debug = False
 
 class Img:
-    def __init__(self, file_name):
+    def __init__(self, file_name, hash=False):
         self.full_name = file_name
         self.name = os.path.basename(file_name)
         image = self.open()
@@ -18,6 +18,9 @@ class Img:
             image = image.convert('RGB')
         self.data = np.asarray(image)
         self.height, self.width, self.depth = self.data.shape
+        if hash:
+            self.hash = perceptual_hash(self.data)
+            self.histogram = histogram(self.data)
 
     def open(self):
         try:
@@ -41,21 +44,46 @@ def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(3):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
+    point = np.unravel_index(correlated.argmax(), correlated.shape)
     if debug:
-        print (correlated.max() - correlated.mean()) / correlated.std()
-        show_stretched(correlated)
-    if correlated.max() > 1.5:	
-        return np.unravel_index(correlated.argmax(), correlated.shape)
+        print 'location: ' + point.__str__()
+        print 'std_dev from mean: ' + ((correlated.max() - correlated.mean()) / correlated.std()).__str__()
+        print 'max_value: ' + correlated.max().__str__()
+        #show_stretched(correlated)
+        #pdb.set_trace()
+    if ((correlated.max() - correlated.mean()) / correlated.std()) > 2 and  confirm_match(pattern, source, point):
+        return point
     else:
         return False
+
+def confirm_match(pattern, source, point):
+    hist_threshold = .25
+    hash_threshold = 5
+    ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0]) 
+    
+    source_hist = histogram(ss)
+    hist_dist = histogram_distance(pattern.histogram, source_hist)    
+    
+    source_hash = perceptual_hash(ss)
+    hash_dist = np.sum(np.abs(pattern.hash - source_hash))
+    
+
+    if debug:
+        print 'hist_dist: ' + hist_dist.__str__()
+        print 'hash_dist: ' + hash_dist.__str__()
+        if hist_dist < hist_threshold or hash_dist < hash_threshold:
+            Image.fromarray(ss.astype(np.uint8)).show()
+            pdb.set_trace()
+    return hist_dist < hist_threshold or hash_dist < hash_threshold
+    
 
 def match_dirs(patterns, sources, debug_flag):
     global debug
     debug = debug_flag
-    for source_file in sources:
-        source = Img(source_file)
-        for pattern_file in patterns:
-            pattern = Img(pattern_file)
+    for pattern_file in patterns:
+        pattern = Img(pattern_file, True)
+        for source_file in sources:
+            source = Img(source_file)
             match_coords = match_rgb(pattern, source)
             print_result(match_coords, pattern, source)
 
@@ -101,7 +129,30 @@ def validate(pattern, source):
     if check_size(pattern, source):
         raise Exception('Pattern file is larger than source file')
     else: 
-        pass 
+        pass
+# This method takes any image, resizes it to 8x8, and hashes into a 64 length
+# array for comparison. It doesn't work at all.
+def perceptual_hash(data):
+    im = np.asarray(Image.fromarray(data).resize((8,8), Image.ANTIALIAS).convert('L'))
+    result = im > im.mean()
+    return result
+
+def source_slice(source, x, y, width, height):
+    slice = source[y:y+height,x:x+width,:]
+    #Image.fromarray(slice.astype(np.uint8)).show()
+    return slice
+
+##Calculate a histogram using 768 buckets, one for each value
+def histogram(data):
+    histograms = np.zeros(0, np.uint8)
+    for i in range(3):
+       histograms =  np.append(histograms, np.histogram(data[:,:,i], bins=256, normed=True)[0])
+    flat = histograms.ravel()
+    return flat
+
+def histogram_distance(h1, h2):
+    diff = h1 - h2
+    return np.sqrt(np.dot(diff, diff))
 
 def check_size(pattern, source):
     return pattern.width > source.width or \
@@ -109,8 +160,8 @@ def check_size(pattern, source):
 
 #debugging/visualization
 
-def show_stretched(image):
-    Image.fromarray(contrast_stretch(image).astype(np.uint8)).show()
+def show_stretched(array):
+    Image.fromarray(contrast_stretch(array).astype(np.uint8)).show()
 
-def contrast_stretch(image):
-    return (image - image.min()) / (image.max() - image.min()) * 255
+def contrast_stretch(array):
+    return (array - array.min()) / (array.max() - array.min()) * 255
