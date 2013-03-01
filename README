@@ -1,24 +1,38 @@
 Software Development Semester Project
+
 =====================================
 1/2. Team Names & Preferred Emails: 
-    Anna McGovern - mcgovern.an@gmail.com
-    Alison Green  - ohohbot@gmail.com
-    Ethan Netland - enetland@gmail.com
-    Chirag Khatri - ckhatri4@gmail.com
+=====================================
 
+Anna McGovern - mcgovern.an@gmail.com
+Alison Green  - ohohbot@gmail.com
+Ethan Netland - enetland@gmail.com
+Chirag Khatri - ckhatri4@gmail.com
+
+=====================================
 3. How to Compile/Run SPIMS: 
-    To run the SPIMS application, go to the bin directory and type
-    './spims -p <pattern_image> -s <source_image>'. 
-    If a match is found it will be returned in the format 
-    specified in the assignment:
-  
-    '<file1> matches <file2> at <m1>x<n1>+<x>+<y>'.
+=====================================
 
-    If a match is not found or the inputs were unacceptable
-    the program will terminate. 
+1) Build the application using the provided Makefile using the 'make'
+   command. The executable will be found in the bin directory
+2) The SPIMS application can be ran using any one of the following commands:
 
+   './spims -p <pattern_image> -s <source_image>'
+   './spims -pdir <pattern_image_dir> -s <source_image>'
+   './spims -p <pattern_image> -sdir <source_image_dir>'
+   './spims -pdir <pattern_image_dir> -sdir <source_image_dir>'
+
+3) If a match is found it will be returned in the format specified in the
+   assignment:
+
+   '<file1> matches <file2> at <m1>x<n1>+<x>+<y>'.
+
+   If a match is not found program will exit with exit code 0.
+   If the inputs were unacceptable the program will exit with exit code 1
+
+=====================================
 4. Third Party Acknowledgements:
-
+=====================================
     Libraries:
     - NumPy - http://www.numpy.org/
     - SciPy - http://www.scipy.org/
@@ -29,8 +43,8 @@ Software Development Semester Project
     - imghdr - http://docs.python.org/2.6/library/imghdr.html
 
     Additional Items:
-    - Algorithm for normalized cross-correlation of function 
-      found on Wikipedia:
+    - Algorithm for normalized cross-correlation of function found on
+      Wikipedia:
       http://en.wikipedia.org/wiki/Cross-correlation#Properties
     - Template Matching By Normalized Cross Correlation from
       Fourier Transform Processing 
