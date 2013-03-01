@@ -20,7 +20,7 @@ class Img:
         self.height, self.width, self.depth = self.data.shape
         if hash:
             self.hash = perceptual_hash(self.data)
-            self.histogram = histogram(self.data)
+            #self.histogram = histogram(self.data)
 
     def open(self):
         try:
@@ -36,6 +36,7 @@ class Img:
         except IOError:
             print "No such file or directory: %s" % fname
             exit(1)
+
 ###############################################################################
 # Main Logic
 ###############################################################################
@@ -48,8 +49,7 @@ def match_dirs(patterns, sources, debug_flag):
         pattern = Img(pattern_file, True)
         for source_file in sources:
             source = Img(source_file)
-            match_coords = match_rgb(pattern, source)
-            print_result(match_coords, pattern, source)
+            match_rgb(pattern, source)
 
 # Loop through the RGB channels of the pattern and source, match each layer
 # takes the highest values from the fft correlation, and validates the match
@@ -58,17 +58,18 @@ def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(3):
         correlated += match_layer(pattern.data[:,:,i], source.data[:,:,i])
-    point = np.unravel_index(correlated.argmax(), correlated.shape)
     if debug:
-        print 'location: ' + point.__str__()
-        print 'std_dev from mean: ' + ((correlated.max() - correlated.mean()) / correlated.std()).__str__()
-        print 'max_value: ' + correlated.max().__str__()
+        pass
         #show_stretched(correlated)
         #pdb.set_trace()
-    if ((correlated.max() - correlated.mean()) / correlated.std()) > 2 and  confirm_match(pattern, source, point):
-        return point
-    else:
-        return False
+
+    while((correlated.max() - correlated.mean() / correlated.std()) > 2):
+        point = np.unravel_index(correlated.argmax(), correlated.shape)
+        if confirm_match(pattern, source, point):
+            print_result(point, pattern, source)
+            correlated = blackout(correlated, point, pattern)
+        else:
+            break
 
 # Run a (simplified) normalized fft correlation over a single channel
 # of the pattern and source
@@ -127,6 +128,27 @@ def print_result(match_coords, pattern, source):
                 source.name, pattern.width, pattern.height, x, y)
         # Can visualize the correlated matrix (For testing)
         # Image.fromarray(correlated).show()
+
+# Blacks out part of the correlation map to eliminate peaks, finding multiple
+# matches
+def blackout(correlated, point, pattern):
+    width = pattern.data.shape[1] / 2
+    height = pattern.data.shape[0] / 2
+    
+    y = point[0] - height / 2
+    y = y if y > 0 else 0
+    
+    x = point[1] - width / 2
+    x =  x if x > 0 else 0
+
+    y2 = point[0] + height / 2
+    y2 = y2 if y2 < correlated.shape[0] else correlated.shape[0]
+
+    x2 = point[1] + width / 2
+    x2 = x2 if x2 < correlated.shape[1] else correlated.shape[1]
+    
+    correlated[y:y2, x:x2] *= np.zeros((y2-y, x2-x))
+    return correlated
 
 # Raises exceptions for the followiing incorrect inputs:
 # Invalid file type, incorrect image format for the pattern or source file 
