@@ -40,8 +40,10 @@ if __name__ == "__main__":
             continue
         
     if patterns is None:
-        raise Exception('Pattern file or Directory must be provided')
+        print 'Pattern file or Directory must be provided'
+        exit(1)
     elif sources is None:
-        raise Exception('Source file or Directory must be provided')
+        print 'Source file or Directory must be provided'
+        exit(1)
     else:
         spims.match_dirs(patterns, sources, debug_flag)
