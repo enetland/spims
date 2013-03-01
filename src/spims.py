@@ -9,6 +9,15 @@ import pdb
 
 debug = False
 
+###############################################################################
+# Image Class
+# Handles loading image files and all error checking
+# Stores relavant information about the image file. 
+# TODO: Should make separate pattern subclass for the hash method, rather than
+#       the current boolean flag
+#       Might also want to normalize and run FFT here, need separate source
+#       Subclass as well
+###############################################################################
 class Img:
     def __init__(self, file_name, hash=False):
         self.full_name = file_name
@@ -20,7 +29,6 @@ class Img:
         self.height, self.width, self.depth = self.data.shape
         if hash:
             self.hash = perceptual_hash(self.data)
-            #self.histogram = histogram(self.data)
 
     def open(self):
         try:
@@ -46,14 +54,21 @@ def match_dirs(patterns, sources, debug_flag):
     global debug
     debug = debug_flag
     for pattern_file in patterns:
-        pattern = Img(pattern_file, True)
+        pattern = Img(pattern_file, hash=True)
         for source_file in sources:
             source = Img(source_file)
-            match_rgb(pattern, source)
+            if pattern.data.shape == (1,1,3):
+                match_pixel(pattern, source)
+            else:
+                match_rgb(pattern, source)
+                
+###############################################################################
+# FFT Algorithm
+###############################################################################              
 
 # Loop through the RGB channels of the pattern and source, match each layer
-# takes the highest values from the fft correlation, and validates the match
-# using a hash algorithm
+# Loop through the correlation until either a match is not found or the max
+# value becomes 0
 def match_rgb(pattern, source):
     correlated = np.zeros(source.data[:,:,0].shape)
     for i in range(3):
@@ -62,7 +77,6 @@ def match_rgb(pattern, source):
         pass
         #show_stretched(correlated)
         #pdb.set_trace()
-
     while correlated.max() > 0:
         point = np.unravel_index(correlated.argmax(), correlated.shape)
         if confirm_match(pattern, source, point):
@@ -97,26 +111,18 @@ def match_layer(pattern_layer, source_layer):
     # http://en.wikipedia.org/wiki/Cross-correlation#Properties
     return fftpack.ifft2(pattern_fft.conjugate() * source_fft) 
 
-# Run the confirmation logic on a matching point
-def confirm_match(pattern, source, point):
-    #hist_threshold = .15
-    hash_threshold = 3
-    ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0]) 
-    
-    #source_hist = histogram(ss)
-    #hist_dist = histogram_distance(pattern.histogram, source_hist)    
-    
-    source_hash = perceptual_hash(ss)
-    hash_dist = np.sum(np.abs(pattern.hash - source_hash))
-    
-    if debug:
-        #print 'hist_dist: ' + hist_dist.__str__()
-        print 'hash_dist: ' + hash_dist.__str__()
-        if hash_dist < hash_threshold:
-            Image.fromarray(ss.astype(np.uint8)).show()
-        pdb.set_trace()
-
-    return  hash_dist < hash_threshold
+###############################################################################
+# Single Pixel Algorithm
+###############################################################################
+def match_pixel(pattern, source):
+    nearest =  np.sum(np.abs(source.data-pattern.data), axis=2)
+    while nearest.min() < 50:
+        point = np.unravel_index(nearest.argmin(), nearest.shape)
+        if pixel_distance(pattern.data, source.data[point]) < 15:
+            print_result(point, pattern, source)
+            nearest[point] = 50
+        else:
+            break
 
 # If the coordinates returned by match are beyond the bounds of the
 # source image, a match was NOT found.
@@ -138,41 +144,53 @@ def print_result(match_coords, pattern, source):
 # Blacks out part of the correlation map to eliminate peaks, finding multiple
 # matches
 def blackout(correlated, point, pattern):
-    if pattern.data.shape[0] == pattern.data.shape[1] == 1:
-        correlated[point] *= 0
-    else:
-        width = pattern.data.shape[1] / 2
-        height = pattern.data.shape[0] / 2    
-
-        y = point[0] - height / 2
-        y = y if y > 0 else 0
+    width = pattern.data.shape[1] / 2
+    height = pattern.data.shape[0] / 2    
     
-        x = point[1] - width / 2
-        x =  x if x > 0 else 0
-
-        y2 = point[0] + height / 2
-        y2 = y2 if y2 < correlated.shape[0] else correlated.shape[0]
-
-        x2 = point[1] + width / 2
-        x2 = x2 if x2 < correlated.shape[1] else correlated.shape[1]
+    # This section basically makes sure we don't go beyond the bounds of the
+    # correlation map 
+    y = point[0] - height / 2
+    y = y if y > 0 else 0
     
-        if y2 == y:
-            y2 = y + 1
-        if x2 == x:
-            x2 = x + 1
-        correlated[y:y2, x:x2] *= np.zeros((y2-y, x2-x))
+    x = point[1] - width / 2
+    x =  x if x > 0 else 0
+
+    y2 = point[0] + height / 2
+    y2 = y2 if y2 < correlated.shape[0] else correlated.shape[0]
+
+    x2 = point[1] + width / 2
+    x2 = x2 if x2 < correlated.shape[1] else correlated.shape[1]
+    
+    if y2 == y:
+        y2 = y + 1
+    if x2 == x:
+        x2 = x + 1
+    # Zero out the correct part of the correlation map
+    correlated[y:y2, x:x2] *= np.zeros((y2-y, x2-x))
     return correlated
-
-# Raises exceptions for the followiing incorrect inputs:
-# Invalid file type, incorrect image format for the pattern or source file 
-# and when the pattern file is bigger than the source file  
-def validate(pattern, source):
-    if check_size(pattern, source):
-        raise Exception('Pattern file is larger than source file')
+    
 
 ###############################################################################
 # Validation Logic
 ##############################################################################
+
+# Run the confirmation logic on a matching point
+def confirm_match(pattern, source, point):
+    ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0]) 
+    if debug:
+        pass
+        #Image.fromarray(ss.astype(np.uint8)).show()
+        #pdb.set_trace()
+    # If the pattern does not have a hash, compare pixels directly
+    if pattern.hash is None:
+        pixel_threshold = 1 + (pattern.data.size / 10)
+        pixel_dist = pixel_distance(pattern.data, ss)    
+        return pixel_dist < pixel_threshold
+    else:
+        hash_threshold = 3
+        source_hash = perceptual_hash(ss)
+        hash_dist = np.sum(np.abs(pattern.hash - source_hash))
+        return  hash_dist < hash_threshold
 
 # This method will slice out a portion of a source image, for use with the hashing
 # and histogram methods
@@ -185,29 +203,29 @@ def source_slice(source, x, y, width, height):
 # array for comparison. It doesn't work at all.
 def perceptual_hash(data):
     im = np.asarray(Image.fromarray(data).resize((8,8), Image.ANTIALIAS).convert('L'))
+    if im.std() < .03:
+        return None
     result = im > im.mean()
     return result
 
-# Calculates a color histogram, using 256 buckets for each RGB channel
-def histogram(data):
-    histograms = np.zeros(0, np.uint8)
-    for i in range(3):
-       histograms =  np.append(histograms, np.histogram(data[:,:,i], bins=256, normed=True)[0])
-    flat = histograms.ravel()
-    return flat
-
-# Given two histograms, calculates a difference between them.
-# This is a very stupid version of the distance calculation, doesn't work very well.
-# With a better distance calculation this could potentially be much more useful.
-def histogram_distance(h1, h2):
-    diff = h1 - h2
-    return np.sqrt(np.dot(diff, diff))
+# Directly calculate the distance between the pixel values of two images. Trying
+# this out for smaller patterns where the hash doesnt make sense
+def pixel_distance(i1, i2):
+    return np.sqrt(np.sum((i1-i2) ** 2))
 
 # Simply confirms that the pattern is smaller in both dimensions than 
 # the source image
 def check_size(pattern, source):
     return pattern.width > source.width or \
             pattern.height > source.height
+            
+# Exits with code 1 for the followiing incorrect inputs:
+# Invalid file type, incorrect image format for the pattern or source file 
+# and when the pattern file is bigger than the source file  
+def validate(pattern, source):
+    if check_size(pattern, source):
+        print 'Pattern file is larger than source file'
+        exit(1)
 
 ###############################################################################
 # Debugging and Visualization
