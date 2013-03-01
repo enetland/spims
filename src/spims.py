@@ -63,7 +63,7 @@ def match_rgb(pattern, source):
         #show_stretched(correlated)
         #pdb.set_trace()
 
-    while((correlated.max() - correlated.mean() / correlated.std()) > 2):
+    while True:
         point = np.unravel_index(correlated.argmax(), correlated.shape)
         if confirm_match(pattern, source, point):
             print_result(point, pattern, source)
