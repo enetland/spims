@@ -63,7 +63,7 @@ def match_rgb(pattern, source):
         #show_stretched(correlated)
         #pdb.set_trace()
 
-    while True:
+    while correlated.max() > 0:
         point = np.unravel_index(correlated.argmax(), correlated.shape)
         if confirm_match(pattern, source, point):
             print_result(point, pattern, source)
@@ -78,8 +78,14 @@ def match_layer(pattern_layer, source_layer):
     # a = (a - mean(a)) / (std(a) * len(a))
     # v = (v - mean(v)) /  std(v)
     # Source: http://bit.ly/WsRveH
-    normalized_pattern = (pattern_layer - np.mean(pattern_layer)) / (np.std(pattern_layer) * pattern_layer.size)
-    normalized_source = (source_layer - np.mean(source_layer)) / np.std(source_layer)
+    if pattern_layer.std() == 0:
+        normalized_pattern = pattern_layer
+    else:
+        normalized_pattern = (pattern_layer - np.mean(pattern_layer)) / (np.std(pattern_layer) * pattern_layer.size)
+    if source_layer.std() == 0:
+        normalized_source = source_layer
+    else:
+        normalized_source = (source_layer - np.mean(source_layer)) / np.std(source_layer)
 
     #Take the fft of both Images, padding the pattern out with 0's
     # to be the same shape as the source
@@ -132,22 +138,29 @@ def print_result(match_coords, pattern, source):
 # Blacks out part of the correlation map to eliminate peaks, finding multiple
 # matches
 def blackout(correlated, point, pattern):
-    width = pattern.data.shape[1] / 2
-    height = pattern.data.shape[0] / 2
-    
-    y = point[0] - height / 2
-    y = y if y > 0 else 0
-    
-    x = point[1] - width / 2
-    x =  x if x > 0 else 0
+    if pattern.data.shape[0] == pattern.data.shape[1] == 1:
+        correlated[point] *= 0
+    else:
+        width = pattern.data.shape[1] / 2
+        height = pattern.data.shape[0] / 2    
 
-    y2 = point[0] + height / 2
-    y2 = y2 if y2 < correlated.shape[0] else correlated.shape[0]
-
-    x2 = point[1] + width / 2
-    x2 = x2 if x2 < correlated.shape[1] else correlated.shape[1]
+        y = point[0] - height / 2
+        y = y if y > 0 else 0
     
-    correlated[y:y2, x:x2] *= np.zeros((y2-y, x2-x))
+        x = point[1] - width / 2
+        x =  x if x > 0 else 0
+
+        y2 = point[0] + height / 2
+        y2 = y2 if y2 < correlated.shape[0] else correlated.shape[0]
+
+        x2 = point[1] + width / 2
+        x2 = x2 if x2 < correlated.shape[1] else correlated.shape[1]
+    
+        if y2 == y:
+            y2 = y + 1
+        if x2 == x:
+            x2 = x + 1
+        correlated[y:y2, x:x2] *= np.zeros((y2-y, x2-x))
     return correlated
 
 # Raises exceptions for the followiing incorrect inputs:
