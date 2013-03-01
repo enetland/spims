@@ -26,13 +26,13 @@ if __name__ == "__main__":
         elif obj == '-pdir':
             if os.path.isdir(sys.argv[i+1]):
                 pattern_dir = sys.argv[i+1]
-                patterns = map(lambda x: pattern_dir + x, os.listdir(pattern_dir))
+                patterns = map(lambda x: pattern_dir + '/' + x, os.listdir(pattern_dir))
                 args.next()
                 continue
         elif obj == '-sdir':
             if os.path.isdir(sys.argv[i+1]):
                 source_dir = sys.argv[i+1]
-                sources = map(lambda x: source_dir + x, os.listdir(source_dir))
+                sources = map(lambda x: source_dir + '/' + x, os.listdir(source_dir))
                 args.next()
                 continue
         elif obj == '-d':
