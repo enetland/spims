@@ -3,6 +3,7 @@
 import sys
 import os
 import Image
+import pdb
 
 sys.path.append("../src/")
 
@@ -18,27 +19,40 @@ if __name__ == "__main__":
     #(options, args) = parser.parse_args()
     #patterns = None
     #sources = None
+    debug_flag = False
+    patterns = None
+    sources = None
+    args = enumerate(sys.argv)
+    for i, obj in args:
+        if obj == '-p':
+            if os.path.isfile(sys.argv[i+1]):
+                patterns = [sys.argv[i+1]]
+                args.next()
+                continue
+        elif obj == '-s':
+            if os.path.isfile(sys.argv[i+1]):
+                sources = [sys.argv[i+1]]
+                args.next()
+                continue
+        elif obj == '-pdir':
+            if os.path.isdir(sys.argv[i+1]):
+                pattern_dir = sys.argv[i+1]
+                patterns = map(lambda x: pattern_dir + x, os.listdir(pattern_dir))
+                args.next()
+                continue
+        elif obj == '-sdir':
+            if os.path.isdir(sys.argv[i+1]):
+                source_dir = sys.argv[i+1]
+                sources = map(lambda x: source_dir + x, os.listdir(source_dir))
+                args.next()
+                continue
+        elif obj == '-d':
+            debug_flag = True
+            continue
+        
+    if patterns is None:
+        raise Exception('Pattern file or Directory must be provided')
+    if sources is None:
+        raise Exception('Source file or Directory must be provided')
 
-    if len(sys.argv) == 5:
-        if sys.argv[1] == '-p' and os.path.isfile(sys.argv[2]):
-            patterns = [sys.argv[2]]
-        elif sys.argv[1] == '-pdir' and os.path.isdir(sys.argv[2]):
-            pattern_dir = sys.argv[2]
-            patterns = map(lambda x: pattern_dir + x, os.listdir(pattern_dir))
-        else:
-            raise Exception('Pattern file or directory must be provided')
-
-        if sys.argv[3] == '-s' and os.path.isfile(sys.argv[4]):
-            sources = [sys.argv[4]]
-        elif sys.argv[3] == '-sdir' and os.path.isdir(sys.argv[4]):
-            source_dir = sys.argv[4]
-            sources = map(lambda x: source_dir + x, os.listdir(source_dir))
-        else:
-            raise Exception('Source file or directory must be provided')
-
-    else:
-        raise Exception('Incorrect number of arguments')
-
-    
-    spims.match_dirs(patterns, sources)
-
+    spims.match_dirs(patterns, sources, debug_flag)
