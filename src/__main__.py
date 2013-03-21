@@ -1,12 +1,12 @@
 import sys
 import os
-import Image
-import pdb
 from spims import Img
 
+
 def error(s):
-	print s
-	exit(1)
+    print s
+    exit(1)
+
 
 def is_valid_arg(arg):
     valid_flag = os.path.isfile(arg) or os.path.isdir(arg)
@@ -14,6 +14,7 @@ def is_valid_arg(arg):
         error('No such file or directory %s' % arg)
     else:
         pass
+
 
 def run(patterns, sources):
     for pattern_file in patterns:
@@ -24,9 +25,6 @@ def run(patterns, sources):
 
 if __name__ == "__main__":
     import spims
-    #(options, args) = parser.parse_args()
-    #patterns = None
-    #sources = None
     debug_flag = False
     patterns = None
     sources = None
@@ -59,16 +57,15 @@ if __name__ == "__main__":
                 debug_flag = True
                 continue
     except IndexError:
-        error_str = \
-        'Please provide input with one of the following forms:\n' + \
-        '\t./spims -p <pattern_image> -s <source_image>' + \
-        '\t./spims -pdir <pattern_image_dir> -s <source_image>' + \
-	'\t./spims --pdir <pattern_image_dir> -s <source_image>' + \
-        '\t./spims -p <pattern_image> -sdir <source_image_dir>' + \
-	'\t./spims -p <pattern_image> --sdir <source_image_dir>' + \
-        '\t./spims -pdir <pattern_image_dir> -sdir <source_image_dir>' + \
-	'\t./spims --pdir<pattern_image_dir> --sdir <source_image_dir>\n'
-        error(error_str) 
+        error_str = 'Please provide input with one of the following forms:\n' + \
+            '\t./spims -p <pattern_image> -s <source_image>' + \
+            '\t./spims -pdir <pattern_image_dir> -s <source_image>' + \
+            '\t./spims --pdir <pattern_image_dir> -s <source_image>' + \
+            '\t./spims -p <pattern_image> -sdir <source_image_dir>' + \
+            '\t./spims -p <pattern_image> --sdir <source_image_dir>' + \
+            '\t./spims -pdir <pattern_image_dir> -sdir <source_image_dir>' + \
+            '\t./spims --pdir<pattern_image_dir> --sdir <source_image_dir>\n'
+        error(error_str)
 
     if patterns is None:
         error('Pattern file or Directory must be provided')
@@ -76,4 +73,3 @@ if __name__ == "__main__":
         print('Source file or Directory must be provided')
     else:
         run(patterns, sources)
-
