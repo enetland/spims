@@ -43,13 +43,13 @@ if __name__ == "__main__":
                 sources = [sys.argv[i+1]]
                 args.next()
                 continue
-            elif obj == '-pdir':
+            elif obj == '-pdir' or obj == '--pdir':
                 is_valid_arg(sys.argv[i+1])
                 pattern_dir = sys.argv[i+1]
                 patterns = map(lambda x: pattern_dir + '/' + x, os.listdir(pattern_dir))
                 args.next()
                 continue
-            elif obj == '-sdir':
+            elif obj == '-sdir' or obj == '--sdir':
                 is_valid_arg(sys.argv[i+1])
                 source_dir = sys.argv[i+1]
                 sources = map(lambda x: source_dir + '/' + x, os.listdir(source_dir))
@@ -63,8 +63,11 @@ if __name__ == "__main__":
         'Please provide input with one of the following forms:\n' + \
         '\t./spims -p <pattern_image> -s <source_image>' + \
         '\t./spims -pdir <pattern_image_dir> -s <source_image>' + \
+	'\t./spims --pdir <pattern_image_dir> -s <source_image>' + \
         '\t./spims -p <pattern_image> -sdir <source_image_dir>' + \
-        '\t./spims -pdir <pattern_image_dir> -sdir <source_image_dir>\n'
+	'\t./spims -p <pattern_image> --sdir <source_image_dir>' + \
+        '\t./spims -pdir <pattern_image_dir> -sdir <source_image_dir>' + \
+	'\t./spims --pdir<pattern_image_dir> --sdir <source_image_dir>\n'
         error(error_str) 
 
     if patterns is None:
