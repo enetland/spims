@@ -2,6 +2,25 @@ import sys
 import os
 import Image
 import pdb
+from spims import Img
+
+def error(s):
+	print s
+	exit(1)
+
+def is_valid_arg(arg):
+    valid_flag = os.path.isfile(arg) or os.path.isdir(arg)
+    if not(valid_flag):
+        error('No such file or directory %s' % arg)
+    else:
+        pass
+
+def run(patterns, sources):
+    for pattern_file in patterns:
+        pattern = Img(pattern_file, True)
+        for source_file in sources:
+            source = Img(source_file)
+            Img.match(pattern, source)
 
 if __name__ == "__main__":
     import spims
@@ -12,38 +31,46 @@ if __name__ == "__main__":
     patterns = None
     sources = None
     args = enumerate(sys.argv)
-    for i, obj in args:
-        if obj == '-p':
-            if os.path.isfile(sys.argv[i+1]):
+    try:
+        for i, obj in args:
+            if obj == '-p':
+                is_valid_arg(sys.argv[i+1])
                 patterns = [sys.argv[i+1]]
                 args.next()
                 continue
-        elif obj == '-s':
-            if os.path.isfile(sys.argv[i+1]):
+            elif obj == '-s':
+                is_valid_arg(sys.argv[i+1])
                 sources = [sys.argv[i+1]]
                 args.next()
                 continue
-        elif obj == '-pdir':
-            if os.path.isdir(sys.argv[i+1]):
+            elif obj == '-pdir':
+                is_valid_arg(sys.argv[i+1])
                 pattern_dir = sys.argv[i+1]
                 patterns = map(lambda x: pattern_dir + '/' + x, os.listdir(pattern_dir))
                 args.next()
                 continue
-        elif obj == '-sdir':
-            if os.path.isdir(sys.argv[i+1]):
+            elif obj == '-sdir':
+                is_valid_arg(sys.argv[i+1])
                 source_dir = sys.argv[i+1]
                 sources = map(lambda x: source_dir + '/' + x, os.listdir(source_dir))
                 args.next()
                 continue
-        elif obj == '-d':
-            debug_flag = True
-            continue
-        
+            elif obj == '-d':
+                debug_flag = True
+                continue
+    except IndexError:
+        error_str = \
+        'Please provide input with one of the following forms:\n' + \
+        '\t./spims -p <pattern_image> -s <source_image>' + \
+        '\t./spims -pdir <pattern_image_dir> -s <source_image>' + \
+        '\t./spims -p <pattern_image> -sdir <source_image_dir>' + \
+        '\t./spims -pdir <pattern_image_dir> -sdir <source_image_dir>\n'
+        error(error_str) 
+
     if patterns is None:
-        print 'Pattern file or Directory must be provided'
-        exit(1)
+        error('Pattern file or Directory must be provided')
     elif sources is None:
-        print 'Source file or Directory must be provided'
-        exit(1)
+        print('Source file or Directory must be provided')
     else:
-        spims.match_dirs(patterns, sources, debug_flag)
+        run(patterns, sources)
+
