@@ -19,8 +19,11 @@ Chirag Khatri - ckhatri4@gmail.com
 
    './spims -p <pattern_image> -s <source_image>'
    './spims -pdir <pattern_image_dir> -s <source_image>'
+   './spims --pdir <pattern_image_dir> -s <source_image>'
    './spims -p <pattern_image> -sdir <source_image_dir>'
+   './spims -p <pattern_image> --sdir <source_image_dir>'
    './spims -pdir <pattern_image_dir> -sdir <source_image_dir>'
+   './spims --pdir <pattern_image_dir> --sdir <source_image_dir>'
 
 3) If a match is found it will be returned in the format specified in the
    assignment:
