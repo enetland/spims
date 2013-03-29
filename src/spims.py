@@ -146,19 +146,20 @@ def match_pixel(pattern, source):
 ##############################################################################
 # Run the confirmation logic on a matching point
 def confirm_match(pattern, source, point):
+    if not is_match_in_bounds(pattern, source, point):
+        return False
+
     ss = source_slice(source.data, point[1], point[0], pattern.data.shape[1], pattern.data.shape[0])
     # If the pattern does not have a hash, compare pixels directly
     if pattern.hash is None:
         pixel_threshold = 1 + (pattern.data.size / 10)
         pixel_dist = pixel_distance(pattern.data, ss)
-        return (pixel_dist < pixel_threshold) and \
-                is_match_in_bounds(pattern, source, point)
+        return (pixel_dist < pixel_threshold)
     else:
         hash_threshold = 3
         source_hash = perceptual_hash(ss)
         hash_dist = np.sum(np.abs(pattern.hash - source_hash))
-        return (hash_dist < hash_threshold) and \
-                is_match_in_bounds(pattern, source, point)
+        return (hash_dist < hash_threshold)
 
 
 def is_match_in_bounds(pattern, source, point):
@@ -169,9 +170,9 @@ def is_match_in_bounds(pattern, source, point):
 # This method will slice out a portion of a source image, for use with the hashing
 # and histogram methods
 def source_slice(source, x, y, width, height):
-    slice = source[y:y+height, x:x+width, :]
+    source_slice = source[y:y+height, x:x+width, :]
     #Image.fromarray(slice.astype(np.uint8)).show()
-    return slice
+    return source_slice
 
 
 # This method takes any image, resizes it to 8x8, and hashes into a 64 length
