@@ -37,7 +37,8 @@ class Img:
         if not (imghdr.what(fname) == 'png'
            or imghdr.what(fname) == 'gif'
            or imghdr.what(fname) == 'jpeg'):
-            error("Invalid file given: %s" % fname)
+            print "Invalid file given: %s" % fname
+            exit(1)
         else:
             return img
 
