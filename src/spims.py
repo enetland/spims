@@ -1,11 +1,10 @@
 import numpy as np
-from scipy import fftpack
 from PIL import Image
 import os
 import imghdr
-import pdb
 import confirmation
 import match
+import single_match
 
 debug = False
 
@@ -37,24 +36,10 @@ class Img:
     def match(pattern, source):
         matches = []
         if pattern.data.shape == (1, 1, 3):
-            matches = match_pixel(pattern, source)
+            matches = single_match.match_pixel(pattern, source)
         else:
             matches = match.fft_match_layers(pattern, source)
         return matches
-
-
-###############################################################################
-# Single Pixel Algorithm
-###############################################################################
-def match_pixel(pattern, source):
-    nearest = np.sum(np.abs(source.data - pattern.data), axis=2)
-    while nearest.min() < 50:
-        point = np.unravel_index(nearest.argmin(), nearest.shape)
-        if confirmation.pixel_distance(pattern.data, source.data[point]) < 15:
-            print_result(point, pattern, source)
-            nearest[point] = 50
-        else:
-            break
 
 
 ###############################################################################
