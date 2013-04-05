@@ -1,3 +1,8 @@
+"""
+Define Img class, handle main matching loop
+
+"""
+
 import numpy as np
 from PIL import Image
 import os
@@ -32,14 +37,22 @@ class Img:
         else:
             return img
 
-    @staticmethod
-    def match(pattern, source):
-        matches = []
-        if pattern.data.shape == (1, 1, 3):
-            matches = single_match.match_pixel(pattern, source)
-        else:
-            matches = match.fft_match_layers(pattern, source)
-        return matches
+
+def do_match(pattern, source):
+    matches = []
+    if pattern.data.shape == (1, 1, 3):
+        matches = single_match.match_pixel(pattern, source)
+    else:
+        matches = match.fft_match_layers(pattern, source)
+    return matches
+
+
+def run(patterns, sources):
+    for pattern_file in patterns:
+        pattern = Img(pattern_file, True)
+        for source_file in sources:
+            source = Img(source_file)
+            do_match(pattern, source)
 
 
 ###############################################################################
