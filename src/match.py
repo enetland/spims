@@ -1,35 +1,53 @@
-###############################################################################
-# FFT Algorithm
-###############################################################################
+"""
+Matching algorithm for pattern and source, using FFT and convolution-theory
+to perform fast normalized cross-correlation.
+
+"""
+
 import numpy as np
 from scipy import fftpack
 import confirmation
 import spims
 
 
-# Loop through the RGB channels of the pattern and source, match each layer
-# Loop through the correlation until either a match is not found or the max
-# value becomes 0
-def fft_match_layers(pattern, source):
+def correlate_rgb(pattern, source):
+    """
+    Loop through the RGB channels of the pattern and source, match each layer.
+    Loop through the correlation until either a match is not found or the max
+    value becomes 0.
+
+    pattern - Img instance for pattern
+    source - Img instance for source
+
+    """
     correlated = np.zeros(source.data[:, :, 0].shape)
+
+    # Loop through each channel of the images, correlating each one.
     for i in range(3):
-        correlated += fft_match_layer(pattern.data[:, :, i], source.data[:, :, i])
-    matches = []
+        correlated += correlate_layer(pattern.data[:,:,i], source.data[:,:,i])
+
     while correlated.max() > 0:
         point = np.unravel_index(correlated.argmax(), correlated.shape)
         if confirmation.confirm_match(pattern, source, point):
             spims.print_result(point, pattern, source)
-            correlated = blackout(correlated, point, pattern)
-            matches.append(point)
+            correlated = blackout(correlated, point, pattern.data.shape)
         else:
             break
-    return matches
 
 
 # Run a (simplified) normalized fft correlation over a single channel
 # of the pattern and source
-def fft_match_layer(pattern_layer, source_layer):
-  # http://bit.ly/WsRveH
+def correlate_layer(pattern_layer, source_layer):
+    """
+    Normalized Cross-Correlation for a single channel of an RGB image
+    (or a greyscale image). Normalization is done as follows:
+    normalized = (x - mean(x)) / std(x)
+
+    pattern_layer - Two-dimensional ndarray, single channel of pattern image
+    source_layer - Two-dimensional ndarray, single channel of source image
+
+    """
+    # http://bit.ly/WsRveH
     if pattern_layer.std() == 0:
         normalized_pattern = pattern_layer
     else:
@@ -52,11 +70,20 @@ def fft_match_layer(pattern_layer, source_layer):
     return fftpack.ifft2(pattern_fft.conjugate() * source_fft)
 
 
-# Blacks out part of the correlation map to eliminate peaks, finding multiple
-# matches
-def blackout(correlated, point, pattern):
-    width = pattern.data.shape[1] / 2
-    height = pattern.data.shape[0] / 2
+def blackout(correlated, point, shape):
+    """
+    Blacks out part of the correlation map after finding a match to ensure
+    matches do not overlap more than 50%. The blacked out portion is equal to
+    half of the image size, centered around the top left corner of the match.
+
+    correlated - correlation plot to be blacked out
+    point - upper left coordinate of match
+    shape - tuple representing size of pattern image (y, x)
+
+    """
+
+    width = shape[1] / 2
+    height = shape[0] / 2
 
     # This section basically makes sure we don't go beyond the bounds of the
     # correlation map

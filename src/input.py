@@ -1,22 +1,36 @@
+""" Handle argument parsing and assosciated errors. """
+
 import sys
 import os
 import spims
 
 
 def error(s):
+    """ Print a helpful error string and exit with code 1 """
     print s
     exit(1)
 
 
-def is_valid_arg(arg):
-    valid_flag = os.path.isfile(arg) or os.path.isdir(arg)
-    if not(valid_flag):
-        error('No such file or directory %s' % arg)
-    else:
-        pass
+def is_valid_file(arg):
+    """ Confirm a file argument is indeed a file. """
+    if not(os.path.isfile(arg)):
+        error('No such file %s' % arg)
 
 
+def is_valid_dir(arg):
+    """ Confirm a directory argument is indeed a directory. """
+    if not(os.path.isdir(arg)):
+        error('No such directory %s' % arg)
+
+
+# TODO: Switch back to optparse method, sanitizing the -pdir and -sdir arguments
+# beforehand
 def get_args():
+    """
+    Loop through sys.argv, extracting the desired arguments. Not using optparse
+    because it does not support the strange -pdir/-sdir syntax.
+
+    """
     debug_flag = False
     patterns = None
     sources = None
@@ -24,32 +38,34 @@ def get_args():
     try:
         for i, obj in args:
             if obj == '-p':
-                is_valid_arg(sys.argv[i+1])
+                is_valid_file(sys.argv[i+1])
                 patterns = [sys.argv[i+1]]
                 args.next()
                 continue
             elif obj == '-s':
-                is_valid_arg(sys.argv[i+1])
+                is_valid_file(sys.argv[i+1])
                 sources = [sys.argv[i+1]]
                 args.next()
                 continue
             elif obj == '-pdir' or obj == '--pdir':
-                is_valid_arg(sys.argv[i+1])
-                pattern_dir = sys.argv[i+1]
-                patterns = map(lambda x: pattern_dir + '/' + x, os.listdir(pattern_dir))
+                is_valid_dir(sys.argv[i+1])
+                pdir = sys.argv[i+1]
+                patterns = \
+                    map(lambda x: pdir + '/' + x, os.listdir(pdir))
                 args.next()
                 continue
             elif obj == '-sdir' or obj == '--sdir':
-                is_valid_arg(sys.argv[i+1])
-                source_dir = sys.argv[i+1]
-                sources = map(lambda x: source_dir + '/' + x, os.listdir(source_dir))
+                is_valid_dir(sys.argv[i+1])
+                sdir = sys.argv[i+1]
+                sources = \
+                    map(lambda x: sdir + '/' + x, os.listdir(sdir))
                 args.next()
                 continue
             elif obj == '-d':
                 debug_flag = True
                 continue
     except IndexError:
-        error_str = 'Please provide input with one of the following forms:\n' + \
+        error_str = 'Please provide input with one of the following forms:\n' +\
             '\t./spims -p <pattern_image> -s <source_image>' + \
             '\t./spims -pdir <pattern_image_dir> -s <source_image>' + \
             '\t./spims --pdir <pattern_image_dir> -s <source_image>' + \
